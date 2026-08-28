@@ -1,20 +1,28 @@
 import random
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import ApplicationBuilder, ContextTypes, CommandHandler, CallbackQueryHandler
 import os
 import logging
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import ApplicationBuilder, ContextTypes, CommandHandler, CallbackQueryHandler
 
 # --- НАСТРОЙКИ ---
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 TELEGRAM_TOKEN = "8592916495:AAE9LL0n8_pA2h3G5I7kVyistpafU9BkSNU"
-BASE_DIR = "/storage/emulated/0"
+# Путь к папке, где лежит сам скрипт и видео (работает и на телефоне, и на сервере)
+BASE_DIR = os.getcwd()
 
 VIDEO_DANCE = os.path.join(BASE_DIR, "dance.mp4")
 VIDEO_BELIE = os.path.join(BASE_DIR, "belie.mp4")
 VIDEO_BUKHET = os.path.join(BASE_DIR, "buhaet.mp4")
 VIDEO_PHOTO = os.path.join(BASE_DIR, "foto.mp4")
+
+# --- ПРОВЕРКА ФАЙЛОВ (ВЫНЕСЕНА НАВЕРХ) ---
+def check_video_file(video_path: str) -> bool:
+    if not os.path.exists(video_path):
+        logger.warning(f"Файл не найден: {video_path}")
+        return False
+    return True
 
 # --- СЛУЧАЙНЫЕ ФРАЗЫ ДЛЯ ВИДЕО ---
 DANCE_PHRASES = [
@@ -72,7 +80,6 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
 
-    # Если нажали "Назад" - отправляем новое сообщение с меню
     if query.data == "back":
         await query.message.reply_text(
             "😂 Привет! Я — депутат Кирилл Бугрименко.\n\nВыбери, что хочешь посмотреть:",
@@ -133,13 +140,6 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         else:
             await query.message.reply_text("❌ Видео не найдено.", reply_markup=back_button())
 
-# --- ПРОВЕРКА ФАЙЛОВ ---
-def check_video_file(video_path: str) -> bool:
-    if not os.path.exists(video_path):
-        logger.warning(f"Файл не найден: {video_path}")
-        return False
-    return True
-
 # --- ЗАПУСК ---
 if __name__ == '__main__':
     print("--- Проверка файлов ---")
@@ -160,4 +160,4 @@ if __name__ == '__main__':
     application.add_handler(CallbackQueryHandler(button_handler))
     
     print("✅ Бот запущен!")
-    application.run_polling(drop_pending_updates=True)
+    application.run_polling()
